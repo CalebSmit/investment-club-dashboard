@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Club Portfolio Review Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .status-section {
+            background: white;
+            padding: 1.5rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-info {
+            font-size: 1rem;
+            color: #1f2937;
+            font-weight: 500;
+        }
+
+        .refresh-btn {
+            background: #1e3a8a;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .refresh-btn:hover {
+            background: #2563eb;
+        }
+
+        .refresh-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .loading-section {
+            background: white;
+            padding: 3rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #1e3a8a;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+
+        .error-section {
+            background: #fef2f2;
+            border-left: 4px solid #dc2626;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .error-title {
+            color: #dc2626;
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .error-message {
+            color: #991b1b;
+            font-size: 1rem;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1e3a8a;
+        }
+
+        .card-subtitle {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+        }
+
+        .section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .export-btn {
+            background: #059669;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background 0.3s;
+        }
+
+        .export-btn:hover {
+            background: #047857;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        thead {
+            background: #f9fafb;
+            position: sticky;
+            top: 0;
+        }
+
+        th {
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background: #f3f4f6;
+        }
+
+        th.sortable::after {
+            content: ' ⇅';
+            opacity: 0.3;
+        }
+
+        th.sort-asc::after {
+            content: ' ▲';
+            opacity: 1;
+        }
+
+        th.sort-desc::after {
+            content: ' ▼';
+            opacity: 1;
+        }
+
+        td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .score-cell {
+            font-weight: 600;
+        }
+
+        .score-high {
+            color: #059669;
+        }
+
+        .score-medium {
+            color: #d97706;
+        }
+
+        .score-low {
+            color: #dc2626;
+        }
+
+        .recommendation {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .rec-strong {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .rec-hold {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .rec-monitor {
+            background: #fed7aa;
+            color: #9a3412;
+        }
+
+        .rec-sell {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 2rem;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .sell-candidate {
+            background: #fef2f2;
+            border-left: 4px solid #dc2626;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+
+        .sell-candidate-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sell-candidate-title {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .sell-candidate-details {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #fecaca;
+        }
+
+        .sell-candidate-details.expanded {
+            display: block;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .detail-item {
+            font-size: 0.875rem;
+        }
+
+        .detail-label {
+            color: #6b7280;
+            font-size: 0.75rem;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .top-performers {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .performer-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: #f0fdf4;
+            border-radius: 6px;
+            border-left: 4px solid #059669;
+        }
+
+        .performer-info {
+            flex: 1;
+        }
+
+        .performer-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .performer-sector {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .performer-score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #059669;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            color: #6b7280;
+            padding: 2rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Investment Club Portfolio Review Dashboard</h1>
+        <p>Multi-Factor Analysis for Stock Holdings</p>
+    </div>
+
+    <div class="container">
+        <!-- Loading Section -->
+        <div id="loadingSection" class="loading-section">
+            <div class="spinner"></div>
+            <div class="loading-text">Loading portfolio data...</div>
+        </div>
+
+        <!-- Error Section -->
+        <div id="errorSection" class="error-section hidden">
+            <div class="error-title">⚠️ Data file not found</div>
+            <div class="error-message">Please run fetch_portfolio_data.py to generate data.</div>
+        </div>
+
+        <!-- Status Section -->
+        <div id="statusSection" class="status-section hidden">
+            <div class="status-info" id="statusInfo">�� Last Updated: --</div>
+            <button class="refresh-btn" id="refreshBtn" onclick="loadPortfolioData()">
+                <span>🔄</span>
+                <span>Refresh Data</span>
+            </button>
+        </div>
+
+        <div id="dashboard" class="hidden">
+            <!-- Summary Cards -->
+            <div class="summary-cards">
+                <div class="card">
+                    <div class="card-title">Total Holdings</div>
+                    <div class="card-value" id="totalHoldings">0</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Avg Composite Score</div>
+                    <div class="card-value" id="avgScore">0</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Strong Holdings</div>
+                    <div class="card-value" id="strongHoldings">0</div>
+                    <div class="card-subtitle">Score ≥ 70</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Sell Candidates</div>
+                    <div class="card-value" id="sellCandidates" style="color: #dc2626;">0</div>
+                    <div class="card-subtitle">Score < 35</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Avg Target Upside</div>
+                    <div class="card-value" id="avgUpside">0%</div>
+                </div>
+            </div>
+
+            <!-- Holdings Table -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">All Holdings</h2>
+                    <button class="export-btn" onclick="exportTableToCSV()">Export to CSV</button>
+                </div>
+                <div class="table-wrapper">
+                    <table id="holdingsTable">
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-column="symbol">Ticker</th>
+                                <th class="sortable" data-column="companyName">Company</th>
+                                <th class="sortable" data-column="sector">Sector</th>
+                                <th class="sortable" data-column="currentPrice">Price</th>
+                                <th class="sortable" data-column="composite">Composite</th>
+                                <th class="sortable" data-column="quality">Quality</th>
+                                <th class="sortable" data-column="value">Value</th>
+                                <th class="sortable" data-column="growth">Growth</th>
+                                <th class="sortable" data-column="momentum">Momentum</th>
+                                <th class="sortable" data-column="targetUpside">Target Upside</th>
+                                <th class="sortable" data-column="recommendation">Recommendation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="chart-grid">
+                <div class="section">
+                    <h2 class="section-title" style="margin-bottom: 1.5rem;">Sector Average Scores</h2>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="sectorBarChart"></canvas>
+                    </div>
+                </div>
+                <div class="section">
+                    <h2 class="section-title" style="margin-bottom: 1.5rem;">Quality vs Momentum</h2>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="scatterChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sector Heatmap -->
+            <div class="section">
+                <h2 class="section-title" style="margin-bottom: 1.5rem;">Sector Factor Heatmap</h2>
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="heatmapChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top Performers -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Top 5 Performers</h2>
+                </div>
+                <div class="top-performers" id="topPerformers">
+                </div>
+            </div>
+
+            <!-- Sell Candidates -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Sell Candidates (Score < 35)</h2>
+                    <button class="export-btn" onclick="exportSellCandidates()">Export Sell Candidates</button>
+                </div>
+                <div id="sellCandidatesSection">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let portfolioData = null;
+        let scoredHoldings = [];
+        let charts = {};
+
+        // Load portfolio data on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            loadPortfolioData();
+        });
+
+        // Fetch portfolio data
+        async function loadPortfolioData() {
+            // Show loading, hide error and dashboard
+            document.getElementById('loadingSection').classList.remove('hidden');
+            document.getElementById('errorSection').classList.add('hidden');
+            document.getElementById('statusSection').classList.add('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+
+            // Disable refresh button
+            const refreshBtn = document.getElementById('refreshBtn');
+            refreshBtn.disabled = true;
+
+            try {
+                const response = await fetch('portfolio_data.json');
+
+                if (!response.ok) {
+                    throw new Error('File not found');
+                }
+
+                portfolioData = await response.json();
+
+                // Hide loading
+                document.getElementById('loadingSection').classList.add('hidden');
+
+                // Show status section
+                document.getElementById('statusSection').classList.remove('hidden');
+                document.getElementById('statusInfo').textContent =
+                    `📊 Last Updated: ${portfolioData.lastUpdated || 'N/A'}`;
+
+                // Process and display data
+                processPortfolioData();
+
+                // Re-enable refresh button
+                refreshBtn.disabled = false;
+
+            } catch (error) {
+                // Hide loading
+                document.getElementById('loadingSection').classList.add('hidden');
+
+                // Show error
+                document.getElementById('errorSection').classList.remove('hidden');
+
+                // Re-enable refresh button
+                refreshBtn.disabled = false;
+
+                console.error('Error loading portfolio data:', error);
+            }
+        }
+
+        // Calculate percentile rank within array
+        function percentileRank(value, array, invert = false) {
+            const sorted = [...array].sort((a, b) => a - b);
+            let rank = sorted.filter(v => v < value).length / sorted.length * 100;
+            return invert ? 100 - rank : rank;
+        }
+
+        // Calculate scores for holdings
+        function calculateScores(holdings) {
+            // Group by sector
+            const sectors = {};
+            holdings.forEach(h => {
+                if (!sectors[h.sector]) sectors[h.sector] = [];
+                sectors[h.sector].push(h);
+            });
+
+            const scored = holdings.map(holding => {
+                const sectorHoldings = sectors[holding.sector];
+
+                // Quality metrics (higher is better, except debtToEquity)
+                const qualityMetrics = ['roe', 'roa', 'profitMargin', 'operatingMargin', 'currentRatio', 'fcfMargin'];
+                const qualityScores = qualityMetrics.map(metric => {
+                    const values = sectorHoldings.map(h => h[metric] || 0);
+                    return percentileRank(holding[metric] || 0, values, false);
+                });
+
+                // Debt to equity (lower is better)
+                const debtValues = sectorHoldings.map(h => h.debtToEquity || 0);
+                qualityScores.push(percentileRank(holding.debtToEquity || 0, debtValues, true));
+
+                const quality = qualityScores.reduce((a, b) => a + b, 0) / qualityScores.length;
+
+                // Value metrics (lower is better - invert)
+                const valueMetrics = ['peTrailing', 'peForward', 'pegRatio', 'priceToBook', 'evToEbitda', 'priceToSales'];
+                const valueScores = valueMetrics.map(metric => {
+                    const values = sectorHoldings.map(h => h[metric] || 0);
+                    return percentileRank(holding[metric] || 0, values, true);
+                });
+                const value = valueScores.reduce((a, b) => a + b, 0) / valueScores.length;
+
+                // Growth metrics (higher is better)
+                const growthMetrics = ['revenueGrowth', 'earningsGrowth', 'earningsQuarterlyGrowth'];
+                const growthScores = growthMetrics.map(metric => {
+                    const values = sectorHoldings.map(h => h[metric] || 0);
+                    return percentileRank(holding[metric] || 0, values, false);
+                });
+                const growth = growthScores.reduce((a, b) => a + b, 0) / growthScores.length;
+
+                // Momentum metrics (higher is better)
+                const momentumMetrics = ['return3M', 'return6M', 'return1Y'];
+                const momentumScores = momentumMetrics.map(metric => {
+                    const values = sectorHoldings.map(h => h[metric] || 0);
+                    return percentileRank(holding[metric] || 0, values, false);
+                });
+                const momentum = momentumScores.reduce((a, b) => a + b, 0) / momentumScores.length;
+
+                // Composite score
+                const composite = (quality * 0.30) + (value * 0.25) + (growth * 0.25) + (momentum * 0.20);
+
+                // Recommendation
+                let recommendation;
+                if (composite >= 70) recommendation = '✅ Strong Hold';
+                else if (composite >= 50) recommendation = '⚡ Hold';
+                else if (composite >= 35) recommendation = '⚠️ Monitor';
+                else recommendation = '🚨 Sell Candidate';
+
+                return {
+                    ...holding,
+                    quality: Math.round(quality * 10) / 10,
+                    value: Math.round(value * 10) / 10,
+                    growth: Math.round(growth * 10) / 10,
+                    momentum: Math.round(momentum * 10) / 10,
+                    composite: Math.round(composite * 10) / 10,
+                    recommendation
+                };
+            });
+
+            return scored;
+        }
+
+        // Get score color class
+        function getScoreClass(score) {
+            if (score >= 70) return 'score-high';
+            if (score >= 40) return 'score-medium';
+            return 'score-low';
+        }
+
+        // Get recommendation class
+        function getRecClass(rec) {
+            if (rec.includes('Strong')) return 'rec-strong';
+            if (rec.includes('Hold') && !rec.includes('Strong')) return 'rec-hold';
+            if (rec.includes('Monitor')) return 'rec-monitor';
+            return 'rec-sell';
+        }
+
+        // Process portfolio data
+        function processPortfolioData() {
+            if (!portfolioData || !portfolioData.holdings) return;
+
+            scoredHoldings = calculateScores(portfolioData.holdings);
+
+            // Update summary cards
+            updateSummaryCards();
+
+            // Populate table
+            populateTable();
+
+            // Create charts
+            createCharts();
+
+            // Show top performers
+            showTopPerformers();
+
+            // Show sell candidates
+            showSellCandidates();
+
+            // Show dashboard
+            document.getElementById('dashboard').classList.remove('hidden');
+        }
+
+        // Update summary cards
+        function updateSummaryCards() {
+            const total = scoredHoldings.length;
+            const avgScore = scoredHoldings.reduce((sum, h) => sum + h.composite, 0) / total;
+            const strong = scoredHoldings.filter(h => h.composite >= 70).length;
+            const sell = scoredHoldings.filter(h => h.composite < 35).length;
+            const avgUpside = scoredHoldings.reduce((sum, h) => sum + (h.targetUpside || 0), 0) / total;
+
+            document.getElementById('totalHoldings').textContent = total;
+            document.getElementById('avgScore').textContent = avgScore.toFixed(1);
+            document.getElementById('strongHoldings').textContent = strong;
+            document.getElementById('sellCandidates').textContent = sell;
+            document.getElementById('avgUpside').textContent = avgUpside.toFixed(1) + '%';
+        }
+
+        // Populate table
+        function populateTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            scoredHoldings.forEach(holding => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${holding.symbol}</strong></td>
+                    <td>${holding.companyName}</td>
+                    <td>${holding.sector}</td>
+                    <td>$${holding.currentPrice.toFixed(2)}</td>
+                    <td class="score-cell ${getScoreClass(holding.composite)}">${holding.composite}</td>
+                    <td class="score-cell ${getScoreClass(holding.quality)}">${holding.quality}</td>
+                    <td class="score-cell ${getScoreClass(holding.value)}">${holding.value}</td>
+                    <td class="score-cell ${getScoreClass(holding.growth)}">${holding.growth}</td>
+                    <td class="score-cell ${getScoreClass(holding.momentum)}">${holding.momentum}</td>
+                    <td>${holding.targetUpside ? holding.targetUpside.toFixed(1) + '%' : 'N/A'}</td>
+                    <td><span class="recommendation ${getRecClass(holding.recommendation)}">${holding.recommendation}</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Add sorting to headers
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', () => sortTable(th.dataset.column));
+            });
+        }
+
+        // Sort table
+        let currentSort = { column: null, direction: 'asc' };
+        function sortTable(column) {
+            // Toggle direction
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'desc'; // Default to descending for scores
+            }
+
+            // Sort holdings
+            scoredHoldings.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+
+                // Handle string comparisons
+                if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+
+                if (currentSort.direction === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            // Update table headers
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                if (th.dataset.column === column) {
+                    th.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            });
+
+            populateTable();
+        }
+
+        // Create charts
+        function createCharts() {
+            createSectorBarChart();
+            createScatterChart();
+            createHeatmap();
+        }
+
+        // Sector bar chart
+        function createSectorBarChart() {
+            const sectorData = {};
+            scoredHoldings.forEach(h => {
+                if (!sectorData[h.sector]) {
+                    sectorData[h.sector] = { composite: [], quality: [], value: [], growth: [], momentum: [] };
+                }
+                sectorData[h.sector].composite.push(h.composite);
+                sectorData[h.sector].quality.push(h.quality);
+                sectorData[h.sector].value.push(h.value);
+                sectorData[h.sector].growth.push(h.growth);
+                sectorData[h.sector].momentum.push(h.momentum);
+            });
+
+            const sectors = Object.keys(sectorData);
+            const avgScores = sectors.map(sector => {
+                const scores = sectorData[sector].composite;
+                return scores.reduce((a, b) => a + b, 0) / scores.length;
+            });
+
+            if (charts.sectorBar) charts.sectorBar.destroy();
+
+            const ctx = document.getElementById('sectorBarChart').getContext('2d');
+            charts.sectorBar = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sectors,
+                    datasets: [{
+                        label: 'Average Composite Score',
+                        data: avgScores,
+                        backgroundColor: avgScores.map(score => {
+                            if (score >= 70) return '#059669';
+                            if (score >= 40) return '#d97706';
+                            return '#dc2626';
+                        })
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // Scatter chart
+        function createScatterChart() {
+            const data = scoredHoldings.map(h => ({
+                x: h.quality,
+                y: h.momentum,
+                label: h.symbol,
+                color: h.composite >= 70 ? '#059669' : h.composite >= 40 ? '#d97706' : '#dc2626'
+            }));
+
+            if (charts.scatter) charts.scatter.destroy();
+
+            const ctx = document.getElementById('scatterChart').getContext('2d');
+            charts.scatter = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Holdings',
+                        data: data,
+                        backgroundColor: data.map(d => d.color),
+                        borderColor: data.map(d => d.color),
+                        pointRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${data[context.dataIndex].label}: Quality ${context.parsed.x.toFixed(1)}, Momentum ${context.parsed.y.toFixed(1)}`;
+                                }
+                            }
+                        },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Quality Score' },
+                            min: 0,
+                            max: 100
+                        },
+                        y: {
+                            title: { display: true, text: 'Momentum Score' },
+                            min: 0,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // Heatmap (using horizontal bar chart as proxy)
+        function createHeatmap() {
+            const sectorData = {};
+            scoredHoldings.forEach(h => {
+                if (!sectorData[h.sector]) {
+                    sectorData[h.sector] = { quality: [], value: [], growth: [], momentum: [] };
+                }
+                sectorData[h.sector].quality.push(h.quality);
+                sectorData[h.sector].value.push(h.value);
+                sectorData[h.sector].growth.push(h.growth);
+                sectorData[h.sector].momentum.push(h.momentum);
+            });
+
+            const sectors = Object.keys(sectorData);
+            const factors = ['quality', 'value', 'growth', 'momentum'];
+            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+
+            const datasets = factors.map((factor, idx) => ({
+                label: factor.charAt(0).toUpperCase() + factor.slice(1),
+                data: sectors.map(sector => {
+                    const scores = sectorData[sector][factor];
+                    return scores.reduce((a, b) => a + b, 0) / scores.length;
+                }),
+                backgroundColor: colors[idx]
+            }));
+
+            if (charts.heatmap) charts.heatmap.destroy();
+
+            const ctx = document.getElementById('heatmapChart').getContext('2d');
+            charts.heatmap = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sectors,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' }
+                    },
+                    scales: {
+                        x: { stacked: false },
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // Show top performers
+        function showTopPerformers() {
+            const top5 = [...scoredHoldings]
+                .sort((a, b) => b.composite - a.composite)
+                .slice(0, 5);
+
+            const container = document.getElementById('topPerformers');
+            container.innerHTML = top5.map((h, idx) => `
+                <div class="performer-item">
+                    <div class="performer-info">
+                        <div class="performer-name">${idx + 1}. ${h.symbol} - ${h.companyName}</div>
+                        <div class="performer-sector">${h.sector}</div>
+                    </div>
+                    <div class="performer-score">${h.composite}</div>
+                </div>
+            `).join('');
+        }
+
+        // Show sell candidates
+        function showSellCandidates() {
+            const sellCandidates = scoredHoldings.filter(h => h.composite < 35);
+            const container = document.getElementById('sellCandidatesSection');
+
+            if (sellCandidates.length === 0) {
+                container.innerHTML = '<p style="color: #059669; text-align: center;">✓ No sell candidates identified!</p>';
+                return;
+            }
+
+            container.innerHTML = sellCandidates.map((h, idx) => `
+                <div class="sell-candidate">
+                    <div class="sell-candidate-header" onclick="toggleSellCandidate(${idx})">
+                        <div class="sell-candidate-title">
+                            ${h.symbol} - ${h.companyName}
+                            <span style="color: #dc2626; margin-left: 1rem;">Score: ${h.composite}</span>
+                        </div>
+                        <span id="toggle-${idx}">▼</span>
+                    </div>
+                    <div class="sell-candidate-details" id="details-${idx}">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">Sector</div>
+                                <div class="detail-value">${h.sector}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Current Price</div>
+                                <div class="detail-value">$${h.currentPrice.toFixed(2)}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Quality Score</div>
+                                <div class="detail-value ${getScoreClass(h.quality)}">${h.quality}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Value Score</div>
+                                <div class="detail-value ${getScoreClass(h.value)}">${h.value}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Growth Score</div>
+                                <div class="detail-value ${getScoreClass(h.growth)}">${h.growth}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Momentum Score</div>
+                                <div class="detail-value ${getScoreClass(h.momentum)}">${h.momentum}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">ROE</div>
+                                <div class="detail-value">${h.roe?.toFixed(2) || 'N/A'}%</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">P/E Trailing</div>
+                                <div class="detail-value">${h.peTrailing?.toFixed(2) || 'N/A'}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Debt/Equity</div>
+                                <div class="detail-value">${h.debtToEquity?.toFixed(2) || 'N/A'}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Target Upside</div>
+                                <div class="detail-value">${h.targetUpside?.toFixed(1) || 'N/A'}%</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">1Y Return</div>
+                                <div class="detail-value">${h.return1Y?.toFixed(1) || 'N/A'}%</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Analyst Rating</div>
+                                <div class="detail-value">${h.recommendationKey || 'N/A'}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Toggle sell candidate details
+        function toggleSellCandidate(idx) {
+            const details = document.getElementById(`details-${idx}`);
+            const toggle = document.getElementById(`toggle-${idx}`);
+
+            if (details.classList.contains('expanded')) {
+                details.classList.remove('expanded');
+                toggle.textContent = '▼';
+            } else {
+                details.classList.add('expanded');
+                toggle.textContent = '▲';
+            }
+        }
+
+        // Export table to CSV
+        function exportTableToCSV() {
+            const headers = ['Ticker', 'Company', 'Sector', 'Price', 'Composite', 'Quality', 'Value', 'Growth', 'Momentum', 'Target Upside', 'Recommendation'];
+            const rows = scoredHoldings.map(h => [
+                h.symbol,
+                h.companyName,
+                h.sector,
+                h.currentPrice.toFixed(2),
+                h.composite,
+                h.quality,
+                h.value,
+                h.growth,
+                h.momentum,
+                h.targetUpside?.toFixed(1) || 'N/A',
+                h.recommendation
+            ]);
+
+            const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+            downloadCSV(csv, 'portfolio_holdings.csv');
+        }
+
+        // Export sell candidates
+        function exportSellCandidates() {
+            const sellCandidates = scoredHoldings.filter(h => h.composite < 35);
+            const headers = ['Ticker', 'Company', 'Sector', 'Composite', 'Quality', 'Value', 'Growth', 'Momentum', 'ROE', 'P/E', 'Debt/Equity', 'Target Upside'];
+            const rows = sellCandidates.map(h => [
+                h.symbol,
+                h.companyName,
+                h.sector,
+                h.composite,
+                h.quality,
+                h.value,
+                h.growth,
+                h.momentum,
+                h.roe?.toFixed(2) || 'N/A',
+                h.peTrailing?.toFixed(2) || 'N/A',
+                h.debtToEquity?.toFixed(2) || 'N/A',
+                h.targetUpside?.toFixed(1) || 'N/A'
+            ]);
+
+            const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+            downloadCSV(csv, 'sell_candidates.csv');
+        }
+
+        // Download CSV helper
+        function downloadCSV(csv, filename) {
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
